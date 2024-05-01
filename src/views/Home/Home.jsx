@@ -1,11 +1,59 @@
-import React from 'react';
-import {useNavigation} from '@react-navigation/native';
+import React, {useCallback, useState} from 'react';
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import {StyleSheet, Text, View} from 'react-native';
 import {Button, Icon} from '@rneui/themed';
 import Header from '../../components/Header';
+import useFoodStorage from '../../hooks/useFoodStorage';
+import TodayCalories from '../../components/TodayCalories';
+import TodayMeals from '../../components/TodayMeals';
+
+const totalCaloriesPerDay = 3000;
 
 const Home = () => {
+  const [todayFood, setTodayFood] = useState([]);
+  const [todayStatistics, setTodayStatistics] = useState({
+    consumed: 0,
+    percentage: 0,
+    remaining: 0,
+    total: totalCaloriesPerDay,
+  });
+  const {onGetTodayFood} = useFoodStorage();
   const {navigate} = useNavigation();
+
+  const calculateStatistics = meals => {
+    try {
+      const caloriesConsumed = meals.reduce(
+        (acum, curr) => acum + Number(curr.calories),
+        0,
+      );
+      const remainingCalories = totalCaloriesPerDay - caloriesConsumed;
+      const percentage = (caloriesConsumed / totalCaloriesPerDay) * 100;
+      setTodayStatistics({
+        consumed: caloriesConsumed,
+        percentage,
+        remaining: remainingCalories,
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const loadTodayFood = useCallback(async () => {
+    try {
+      const response = await onGetTodayFood();
+      calculateStatistics(response);
+      setTodayFood(response);
+    } catch (error) {
+      setTodayFood([]);
+      console.error(error);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadTodayFood().catch(null);
+    }, [loadTodayFood]),
+  );
 
   const handleAddCaloriesPress = () => {
     navigate('AddFood');
@@ -27,6 +75,11 @@ const Home = () => {
           />
         </View>
       </View>
+      <TodayCalories {...todayStatistics} />
+      <TodayMeals
+        foods={todayFood}
+        onCompleteAddRemove={() => loadTodayFood()}
+      />
     </View>
   );
 };

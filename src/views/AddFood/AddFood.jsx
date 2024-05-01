@@ -9,6 +9,7 @@ import MealItem from '../../components/MealItem/MealItem';
 export const AddFood = () => {
   const [visible, setVisible] = useState(false);
   const [foods, setFoods] = useState([]);
+  const [search, setSearch] = useState('');
 
   const {onGetFoods} = useFoodStorage();
 
@@ -32,6 +33,20 @@ export const AddFood = () => {
     }
     setVisible(false);
   };
+
+  const handleSearchPress = async () => {
+    try {
+      const result = await onGetFoods();
+      setFoods(
+        result.filter(item =>
+          item.name.toLocaleLowerCase().includes(search.toLocaleLowerCase()),
+        ),
+      );
+    } catch (error) {
+      console.error(error);
+      setFoods([]);
+    }
+  };
   return (
     <View style={styles.container}>
       <Header />
@@ -50,18 +65,23 @@ export const AddFood = () => {
       </View>
       <View style={styles.searchContainer}>
         <View style={styles.inputContainer}>
-          <Input placeholder="manzana, banana, gaseosa" />
+          <Input
+            placeholder="manzana, banana, gaseosa"
+            value={search}
+            onChangeText={text => setSearch(text)}
+          />
         </View>
         <Button
           title="Seach"
           color="#78F18D"
           titleStyle={styles.searchBtnTitle}
           radius="lg"
+          onPress={handleSearchPress}
         />
       </View>
       <ScrollView style={styles.content}>
         {foods?.map(meal => (
-          <MealItem key={meal.name} {...meal} />
+          <MealItem key={meal.name} {...meal} isAbleToAdd={true} />
         ))}
       </ScrollView>
       <AddFoodModal visible={visible} onClose={handleModalClose} />

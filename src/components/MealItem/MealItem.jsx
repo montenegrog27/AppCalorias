@@ -1,8 +1,33 @@
-import {StyleSheet, Text, View} from 'react-native';
+import {Alert, StyleSheet, Text, View} from 'react-native';
 import React from 'react';
 import {Button, Icon} from '@rneui/themed';
+import useFoodStorage from '../../hooks/useFoodStorage';
 
-const MealItem = ({calories, portion, name}) => {
+const MealItem = ({
+  calories,
+  portion,
+  name,
+  isAbleToAdd,
+  onCompleteAddRemove,
+  itemPosition,
+}) => {
+  const {onSaveTodayFood, onDeleteTodayFood} = useFoodStorage();
+
+  const handleIconPress = async () => {
+    try {
+      if (isAbleToAdd) {
+        await onSaveTodayFood({calories, portion, name});
+        Alert.alert('Comida agregada al día');
+      } else {
+        await onDeleteTodayFood(itemPosition);
+        Alert.alert('Comida eliminada');
+        onCompleteAddRemove();
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Comida no agregada');
+    }
+  };
   return (
     <View style={styles.container}>
       <View style={styles.leftContainer}>
@@ -11,9 +36,10 @@ const MealItem = ({calories, portion, name}) => {
       </View>
       <View style={styles.rightContainer}>
         <Button
-          icon={<Icon name="add-circle-outline" />}
+          icon={<Icon name={isAbleToAdd ? 'add-circle-outline' : 'close'} />}
           type="clear"
           style={styles.iconButton}
+          onPress={handleIconPress}
         />
         <Text style={styles.calories}>{calories} cal</Text>
       </View>
