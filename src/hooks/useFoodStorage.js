@@ -77,10 +77,13 @@ const useFoodStorage = () => {
 
       if (foods !== null) {
         const parsedFoods = JSON.parse(foods);
-
-        return Promise.resolve(
-          parsedFoods.filter(item => item.date && isToday(new Date(item.date))),
+        const filteredFoods = parsedFoods.filter(
+          item => item.date && isToday(new Date(item.date)),
         );
+        return Promise.resolve(filteredFoods);
+      } else {
+        // Si no hay alimentos guardados para el día actual, retornar un array vacío
+        return Promise.resolve([]);
       }
     } catch (error) {
       return Promise.reject(error);

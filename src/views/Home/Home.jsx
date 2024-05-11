@@ -22,6 +22,11 @@ const Home = () => {
 
   const calculateStatistics = meals => {
     try {
+      // Verificar si meals está definido y es un array
+      if (!Array.isArray(meals)) {
+        throw new Error('Meals should be an array');
+      }
+
       const caloriesConsumed = meals.reduce(
         (acum, curr) => acum + Number(curr.calories),
         0,
@@ -41,8 +46,13 @@ const Home = () => {
   const loadTodayFood = useCallback(async () => {
     try {
       const response = await onGetTodayFood();
-      calculateStatistics(response);
-      setTodayFood(response);
+      console.log(response); // Agregar este console.log para revisar la estructura de la data
+      if (response && Array.isArray(response)) {
+        calculateStatistics(response);
+        setTodayFood(response);
+      } else {
+        console.error('Today food data is invalid.');
+      }
     } catch (error) {
       setTodayFood([]);
       console.error(error);
